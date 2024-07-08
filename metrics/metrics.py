@@ -8,7 +8,6 @@ import math
 
 #spefics for FFB6D
 from FFB6D.common import Config
-from FFB6D.basic_utils import Basic_Utils
 
 #taken from basic_utlis.py
 def VOCap(rec, prec):
@@ -55,47 +54,6 @@ def cal_adds_cuda(
     mdis = torch.min(dis, dim=1)[0]
     return torch.mean(mdis)
 
-
-#taken from pvn3d_eval_utlis_kpls.py
-def eval_metric(
-    cls_ids, pred_pose_lst, pred_cls_ids, RTs, 
-    gt_kps, gt_ctrs, pred_kpc_lst
-):
-    config = Config(ds_name='ycb')
-    bs_utils = Basic_Utils(config)
-    cls_lst = config.ycb_cls_lst
-
-    
-    n_cls = config.n_classes
-    cls_add_dis = [list() for i in range(n_cls)]
-    cls_adds_dis = [list() for i in range(n_cls)]
-    cls_kp_err = [list() for i in range(n_cls)]
-    for icls, cls_id in enumerate(cls_ids):
-        if cls_id == 0:
-            break
-
-        gt_kp = gt_kps[icls].contiguous().cpu().numpy()
-
-        cls_idx = np.where(pred_cls_ids == cls_id[0].item())[0]
-        if len(cls_idx) == 0:
-            pred_RT = torch.zeros(3, 4).cuda()
-            pred_kp = np.zeros(gt_kp.shape)
-        else:
-            pred_RT = pred_pose_lst[cls_idx[0]]
-            pred_kp = pred_kpc_lst[cls_idx[0]][:-1, :]
-            pred_RT = torch.from_numpy(pred_RT.astype(np.float32)).cuda()
-        kp_err = np.linalg.norm(gt_kp-pred_kp, axis=1).mean()
-        cls_kp_err[cls_id].append(kp_err)
-        gt_RT = RTs[icls]
-        mesh_pts = bs_utils.get_pointxyz_cuda(cls_lst[cls_id-1]).clone()
-        add = bs_utils.cal_add_cuda(pred_RT, gt_RT, mesh_pts)
-        adds = bs_utils.cal_adds_cuda(pred_RT, gt_RT, mesh_pts)
-        cls_add_dis[cls_id].append(add.item())
-        cls_adds_dis[cls_id].append(adds.item())
-        cls_add_dis[0].append(add.item())
-        cls_adds_dis[0].append(adds.item())
-
-    return (cls_add_dis, cls_adds_dis, cls_kp_err)
 
 def tensor_to_numpy(tensor_or_array):
     """Converts a PyTorch tensor or a NumPy array to a NumPy array.
@@ -154,38 +112,6 @@ def re(R_est, R_gt):
     error = math.acos(error_cos)
     return error
 
-def get_RE_TE(
-    cls_ids, pred_pose_lst, pred_cls_ids, RTs, 
-    gt_kps, gt_ctrs, pred_kpc_lst
-):
-    config = Config(ds_name='ycb')
-
-    
-    n_cls = config.n_classes
-    te_list = [list() for i in range(n_cls)]
-    re_list = [list() for i in range(n_cls)]
-    for icls, cls_id in enumerate(cls_ids):
-        if cls_id == 0:
-            break
-
-        gt_kp = gt_kps[icls].contiguous().cpu().numpy()
-
-        cls_idx = np.where(pred_cls_ids == cls_id[0].item())[0]
-        if len(cls_idx) == 0:
-            pred_RT = torch.zeros(3, 4).cuda()
-        else:
-            pred_RT = pred_pose_lst[cls_idx[0]]
-        gt_RT = RTs[icls].cpu().detach().numpy()
-
-        #print(gt_RT[:, 3])
-        #print(pred_RT[:, 3])
-
-
-
-        te_list.append(te(gt_RT[:, 3], pred_RT[:, 3]))
-        re_list.append(re(gt_RT[:, :3], pred_RT[:, :3]))
-
-    return (re_list, te_list)
 
 
 def rotation_matrix_from_axis_angle(u, theta):
@@ -340,7 +266,7 @@ def error_metric(R_gt, t_gt, R_est, t_est, cls_id):
     symmertic_dict, rotation_invarant_list = get_rotations_for_cls(cls_id)
     rotation_error = rotation_error_metric(R_gt, R_est, symmertic_dict, rotation_invarant_list) / math.pi # Scale rotation error to be 0 <= rotation_error <= 1, so it has the same weight as the translation error
     translation_error = te(t_est, t_gt)
-    translation_error = min(translation_error/0.1, 1) #normalize the translation error it should be 1 at 3.5m, since it is the max range of asus xtion depth sensor, larger error do not make much sence
+    translation_error = min(translation_error/0.1, 1) #normalize the translation error
 
     return rotation_error + translation_error
 
@@ -415,19 +341,6 @@ def get_dd_error_over_detected(cls_ids, pred_pose_lst, pred_cls_ids, RTs,
 def get_dd_error_over_real_and_predicted(cls_ids, pred_pose_lst, pred_cls_ids, RTs, 
     gt_kps, gt_ctrs, pred_kpc_lst
 ):
-    # print("--------------------------dd-------------------")
-    # print("cls_ids")
-    # print(cls_ids.shape)
-    # print("----------------------------------")
-    # print("pred_pose_lst")
-    # print(pred_pose_lst)
-    # print("----------------------------------")
-    # print("pred_cls_ids")
-    # print(pred_cls_ids)
-    # print("----------------------------------")
-    # print("RTs")
-    # print(RTs)
-    # print("------------End----------dd")
 
     pred_cls_ids_list = pred_cls_ids.tolist()
 

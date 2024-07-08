@@ -1,0 +1,6 @@
+opencv-python
+torch
+numpy
+scikit-learn
+matplotlib
+pyyaml
