@@ -21,9 +21,6 @@ The rest is helper methods for FFB6D.
 In find_symmetry_axis.py the implementation for finding symmetry axis, using PCA can be found.
 
 ## License
-
-Specify the license under which the repository is distributed. For example:
-
 ```markdown
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 ```
