@@ -5,17 +5,6 @@
 
 Current state-of-the-art evaluation methods for 6D pose estimation have several significant drawbacks. Existing error metrics can produce near-zero errors for poor pose estimations and are heavily dependent on the object point cloud used, resulting in vastly different outcomes for different objects. Furthermore, false detections are not considered at all. In this paper, we conduct experiments to provide insights into how these metrics behave under isolated errors. We also introduce a novel evaluation approach with a metric independent of point clouds, making it applicable to a broader range of use cases than current metrics.
 
-## Table of Contents
-
-1. [Introduction](#introduction)
-2. [Installation](#installation)
-3. [Usage](#usage)
-4. [Data](#data)
-5. [Results](#results)
-6. [Contributing](#contributing)
-7. [License](#license)
-8. [Contact](#contact)
-
 ## Introduction
 
 This repository contains the implementation of the proposed evaluation metric/score of the paper.
